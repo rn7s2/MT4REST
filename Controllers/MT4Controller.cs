@@ -87,7 +87,7 @@ public class MT4Controller : ControllerBase
             }
 
             Console.WriteLine("No servers to try now, connection failed.");
-            return Forbid();
+            return StatusCode(403);
         }
     }
 
@@ -116,7 +116,7 @@ public class MT4Controller : ControllerBase
         {
             Console.WriteLine(e.ToString());
 
-            return Forbid();
+            return StatusCode(403);
         }
     }
 
