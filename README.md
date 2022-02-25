@@ -1,5 +1,5 @@
-# MT4REST
-RESTful API Wrapper for MT4 .NET API.
+# MT4~REST~
+~RESTful~ Web API Wrapper for MT4 .NET API.
 
 # **WARNING**
 IT SHOULD ***NOT*** BE USED IN PRODUCTION!!!
