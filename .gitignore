@@ -3,3 +3,5 @@ bin/
 obj/Debug/
 obj/Release/
 obj/staticwebassets.pack.sentinel
+MT4ServerAPI.dll
+*.srv
