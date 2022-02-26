@@ -19,14 +19,14 @@ public class MT4Controller : ControllerBase
 
     [HttpGet]
     [Route("Ping")]
-    public IActionResult GetPing(string host)
+    public ActionResult<int> GetPing(string host)
     {
         return CreatedAtAction(nameof(GetPing), QuoteClient.PingHost(host));
     }
 
     [HttpPost]
     [Route("LoadSrv")]
-    public IActionResult PostLoadSrv(IFormFile file)
+    public ActionResult<Server[]> PostLoadSrv(IFormFile file)
     {
         FileStream stream = new FileStream(_srvFilePath, FileMode.Create);
         file.CopyTo(stream);
@@ -39,7 +39,7 @@ public class MT4Controller : ControllerBase
 
     [HttpPost]
     [Route("Connect")]
-    public IActionResult PostConnect(int user, string password, IFormFile file)
+    public ActionResult<ulong> PostConnect(int user, string password, IFormFile file)
     {
         FileStream stream = new FileStream(_srvFilePath, FileMode.Create);
         file.CopyTo(stream);
@@ -64,13 +64,13 @@ public class MT4Controller : ControllerBase
                 Thread.Sleep(10);
             Console.WriteLine("Server time: " + qc.ServerTime);
 
-            return CreatedAtAction(nameof(PostConnect), QuoteClientService.Add(qc));
+            return CreatedAtAction(nameof(PostConnect), AccountService.Add(qc));
         }
         catch (Exception e)
         {
             Console.WriteLine(e.ToString());
 
-            for (int i = 1; i < SrvList.Length; i++)
+            for (int i = 0; i < SrvList.Length; i++)
             {
                 qc = new QuoteClient(user, password, SrvList[i].Host, SrvList[i].Port);
                 try
@@ -78,7 +78,7 @@ public class MT4Controller : ControllerBase
                     Console.WriteLine("Trying slave server #" + i);
                     qc.Connect();
 
-                    return CreatedAtAction(nameof(PostConnect), QuoteClientService.Add(qc));
+                    return CreatedAtAction(nameof(PostConnect), AccountService.Add(qc));
                 }
                 catch (Exception _e)
                 {
@@ -93,7 +93,7 @@ public class MT4Controller : ControllerBase
 
     [HttpGet]
     [Route("Connect")]
-    public IActionResult GetConnect(int user, string password, string host, int port)
+    public ActionResult<ulong> GetConnect(int user, string password, string host, int port)
     {
         QuoteClient qc = new QuoteClient(user, password, host, port);
         qc.PathForSavingSrv = ".";
@@ -110,7 +110,7 @@ public class MT4Controller : ControllerBase
                 Thread.Sleep(10);
             Console.WriteLine("Server time: {}", qc.ServerTime);
 
-            return CreatedAtAction(nameof(GetConnect), QuoteClientService.Add(qc));
+            return CreatedAtAction(nameof(GetConnect), AccountService.Add(qc));
         }
         catch (Exception e)
         {
@@ -122,39 +122,39 @@ public class MT4Controller : ControllerBase
 
     [HttpGet]
     [Route("Groups")]
-    public IActionResult GetGroups(ulong id)
+    public ActionResult<ConSymbolGroup[]> GetGroups(ulong id)
     {
-        var qc = QuoteClientService.Get(id);
-        if (qc is null)
+        var account = AccountService.Get(id);
+        if (account is null)
             return NotFound();
-        return CreatedAtAction(nameof(GetGroups), qc.Groups);
+        return CreatedAtAction(nameof(GetGroups), account.qc.Groups);
     }
 
     [HttpGet]
     [Route("QuoteClient")]
-    public IActionResult GetQuoteClient(ulong id)
+    public ActionResult<QuoteClient> GetQuoteClient(ulong id)
     {
-        var qc = QuoteClientService.Get(id);
-        if (qc is null)
+        var account = AccountService.Get(id);
+        if (account is null)
             return NotFound();
 
-        return CreatedAtAction(nameof(GetQuoteClient), qc);
+        return CreatedAtAction(nameof(GetQuoteClient), account.qc);
     }
 
     [HttpGet]
     [Route("Disconnect")]
     public IActionResult GetDisconnect(ulong id)
     {
-        var qc = QuoteClientService.Get(id);
-        if (qc is null)
+        var account = AccountService.Get(id);
+        if (account is null)
             return NotFound();
 
-        if (qc.Connected)
+        if (account.qc.Connected)
         {
             Console.WriteLine("Disconnecting...");
-            qc.Disconnect();
+            account.qc.Disconnect();
         }
-        QuoteClientService.Delete(id);
+        AccountService.Delete(id);
 
         return Ok();
     }

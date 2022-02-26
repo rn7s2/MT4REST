@@ -16,7 +16,10 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+app.UseWebSockets(new WebSocketOptions()
+{
+    KeepAliveInterval = TimeSpan.FromSeconds(30),
+});
 
 app.UseAuthorization();
 
