@@ -46,22 +46,11 @@ public class WebSocketController : ControllerBase
 
             account.qc.OnQuote += new QuoteEventHandler(qc_OnQuote);
 
-            // 此处应该检测客户端是否断开
-            // 应该由客户端heartbeat来表明自己没有断开
+            // 通过从客户端读取数据来检测客户端是否断开
             var buffer = new byte[1024 * 4];
             WebSocketReceiveResult result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
             while (!result.CloseStatus.HasValue)
-            {
-                string msg = "You just sent \"" + Encoding.UTF8.GetString(buffer) + "\" to me. Copy that.";
-                buffer.Initialize();
-                await webSocket.SendAsync(
-                    new ArraySegment<byte>(Encoding.UTF8.GetBytes(msg)),
-                    WebSocketMessageType.Text,
-                    true,
-                    CancellationToken.None
-                );
                 result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
-            }
             await webSocket.CloseAsync(result.CloseStatus.Value, result.CloseStatusDescription, CancellationToken.None);
         }
     }

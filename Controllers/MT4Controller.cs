@@ -1,4 +1,5 @@
 using MT4REST.Services;
+using MT4REST.Models;
 using TradingAPI.MT4Server;
 using Microsoft.AspNetCore.Mvc;
 
@@ -139,6 +140,176 @@ public class MT4Controller : ControllerBase
             return NotFound();
 
         return CreatedAtAction(nameof(GetQuoteClient), account.qc);
+    }
+
+    [HttpGet]
+    [Route("OpenedOrders")]
+    public ActionResult<Order[]> GetOpenedOrders(ulong id)
+    {
+        var account = AccountService.Get(id);
+        if (account is null)
+            return NotFound();
+
+        return CreatedAtAction(nameof(GetOpenedOrders), account.qc.GetOpenedOrders());
+    }
+
+    [HttpGet]
+    [Route("Symbols")]
+    public ActionResult<SymbolInfo[]> GetSymbols(ulong id)
+    {
+        var account = AccountService.Get(id);
+        if (account is null)
+            return NotFound();
+
+        return CreatedAtAction(nameof(GetSymbols), account.qc.SymbolsInfo);
+    }
+
+    [HttpGet]
+    [Route("SymbolParams")]
+    public ActionResult<SymbolParams> GetSymbolParams(ulong id, string symbol)
+    {
+        var account = AccountService.Get(id);
+        if (account is null)
+            return NotFound();
+
+        return CreatedAtAction(
+            nameof(GetSymbolParams),
+            new SymbolParams(
+                account.qc.GetSymbolInfo(symbol),
+                account.qc.GetSymbolGroup(symbol),
+                account.qc.GetSymbolGroupParams(symbol)
+            )
+        );
+    }
+
+    [HttpGet]
+    [Route("OpenedOrder")]
+    public ActionResult<Order> GetOpenedOrder(ulong id, int ticket)
+    {
+        var account = AccountService.Get(id);
+        if (account is null)
+            return NotFound();
+
+        return CreatedAtAction(nameof(GetOpenedOrder), account.qc.GetOpenedOrder(ticket));
+    }
+
+    [HttpGet]
+    [Route("OrderHistory")]
+    public ActionResult<Order[]> GetOrderHistory(ulong id, string from, string to)
+    {
+        var account = AccountService.Get(id);
+        if (account is null)
+            return NotFound();
+
+        DateTime start = DateTime.ParseExact(from, "yyyy-MM-dd HH:mm:ss", System.Globalization.CultureInfo.CurrentCulture);
+        DateTime end = DateTime.ParseExact(to, "yyyy-MM-dd HH:mm:ss", System.Globalization.CultureInfo.CurrentCulture);
+
+        return CreatedAtAction(nameof(GetOrderHistory), account.qc.DownloadOrderHistory(start, end));
+    }
+
+    [HttpGet]
+    [Route("QuoteHistory")]
+    public ActionResult<Bar[]> GetQuoteHistory(ulong id, string symbol, string timeframe, string from, int count)
+    {
+        var account = AccountService.Get(id);
+        if (account is null)
+            return NotFound();
+
+        Timeframe tf = 0;
+        switch (timeframe)
+        {
+            case "M1":
+                tf = Timeframe.M1;
+                break;
+            case "M5":
+                tf = Timeframe.M5;
+                break;
+            case "M15":
+                tf = Timeframe.M15;
+                break;
+            case "M30":
+                tf = Timeframe.M30;
+                break;
+            case "H1":
+                tf = Timeframe.H1;
+                break;
+            case "H4":
+                tf = Timeframe.H4;
+                break;
+            case "D1":
+                tf = Timeframe.D1;
+                break;
+            case "W1":
+                tf = Timeframe.W1;
+                break;
+            case "MN1":
+                tf = Timeframe.MN1;
+                break;
+            default:
+                StatusCode(400);
+                break;
+        }
+
+        DateTime start = DateTime.ParseExact(from, "yyyy-MM-dd HH:mm:ss", System.Globalization.CultureInfo.CurrentCulture);
+
+        return CreatedAtAction(nameof(GetQuoteHistory), account.qc.DownloadQuoteHistory(symbol, tf, start, count));
+    }
+
+    [HttpGet]
+    [Route("OrderSend")]
+    public ActionResult<Order> GetOrderSend(ulong id, string symbol, string operation,
+                                            double volume, double? price, int? slippage,
+                                            double? stoploss, double? takeprofit, string? comment,
+                                            int? magic, string? expiration)
+    {
+        var account = AccountService.Get(id);
+        if (account is null)
+            return NotFound();
+
+        Op op = 0;
+        switch (operation)
+        {
+            case "Buy":
+                op = Op.Buy;
+                break;
+            case "Sell":
+                op = Op.Sell;
+                break;
+            case "BuyLimit":
+                op = Op.BuyLimit;
+                break;
+            case "SellLimit":
+                op = Op.SellLimit;
+                break;
+            case "BuyStop":
+                op = Op.BuyStop;
+                break;
+            case "SellStop":
+                op = Op.SellStop;
+                break;
+            default:
+                StatusCode(400);
+                break;
+        }
+
+        DateTime e;
+        if (expiration is null)
+            e = default(DateTime);
+        else
+            e = DateTime.ParseExact(expiration, "yyyy-MM-dd HH:mm:ss", System.Globalization.CultureInfo.CurrentCulture);
+
+        return CreatedAtAction(
+            nameof(GetOrderSend),
+            account.oc.OrderSend(
+                symbol, op, volume,
+                price ?? account.qc.GetQuote(symbol).Bid,
+                slippage ?? 200,
+                stoploss ?? 0,
+                takeprofit ?? 0,
+                comment ?? string.Empty,
+                magic ?? 0,
+                e)
+        );
     }
 
     [HttpGet]
