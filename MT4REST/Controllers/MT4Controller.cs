@@ -2,6 +2,7 @@ using MT4REST.Services;
 using MT4REST.Models;
 using TradingAPI.MT4Server;
 using Microsoft.AspNetCore.Mvc;
+using System.Text.Json;
 
 namespace MT4REST.Controllers;
 
@@ -106,10 +107,10 @@ public class MT4Controller : ControllerBase
             qc.Connect();
 
             Console.WriteLine("Connected to server.");
-            Console.WriteLine("Server build: {}", qc.ServerBuild);
+            Console.WriteLine("Server build: " + qc.ServerBuild);
             while (qc.ServerTime == DateTime.MinValue)
                 Thread.Sleep(10);
-            Console.WriteLine("Server time: {}", qc.ServerTime);
+            Console.WriteLine("Server time: " + qc.ServerTime);
 
             return CreatedAtAction(nameof(GetConnect), AccountService.Add(qc));
         }
@@ -150,7 +151,13 @@ public class MT4Controller : ControllerBase
         if (account is null)
             return NotFound();
 
-        return CreatedAtAction(nameof(GetOpenedOrders), account.qc.GetOpenedOrders());
+        return CreatedAtAction(
+            nameof(GetOpenedOrders),
+            JsonSerializer.Serialize(
+                account.qc.GetOpenedOrders(),
+                JsonSerializerOptionsService.order
+            )
+        );
     }
 
     [HttpGet]
@@ -190,7 +197,13 @@ public class MT4Controller : ControllerBase
         if (account is null)
             return NotFound();
 
-        return CreatedAtAction(nameof(GetOpenedOrder), account.qc.GetOpenedOrder(ticket));
+        return CreatedAtAction(
+            nameof(GetOpenedOrder),
+            JsonSerializer.Serialize(
+                account.qc.GetOpenedOrder(ticket),
+                JsonSerializerOptionsService.order
+            )
+        );
     }
 
     [HttpGet]
@@ -204,7 +217,13 @@ public class MT4Controller : ControllerBase
         DateTime start = DateTime.ParseExact(from, "yyyy-MM-dd HH:mm:ss", System.Globalization.CultureInfo.CurrentCulture);
         DateTime end = DateTime.ParseExact(to, "yyyy-MM-dd HH:mm:ss", System.Globalization.CultureInfo.CurrentCulture);
 
-        return CreatedAtAction(nameof(GetOrderHistory), account.qc.DownloadOrderHistory(start, end));
+        return CreatedAtAction(
+            nameof(GetOrderHistory),
+            JsonSerializer.Serialize(
+                account.qc.DownloadOrderHistory(start, end),
+                JsonSerializerOptionsService.order
+            )
+        );
     }
 
     [HttpGet]
@@ -300,15 +319,19 @@ public class MT4Controller : ControllerBase
 
         return CreatedAtAction(
             nameof(GetOrderSend),
-            account.oc.OrderSend(
-                symbol, op, volume,
-                price ?? account.qc.GetQuote(symbol).Bid,
-                slippage ?? 200,
-                stoploss ?? 0,
-                takeprofit ?? 0,
-                comment ?? string.Empty,
-                magic ?? 0,
-                e)
+            JsonSerializer.Serialize(
+                account.oc.OrderSend(
+                    symbol, op, volume,
+                    price ?? account.qc.GetQuote(symbol).Bid,
+                    slippage ?? 200,
+                    stoploss ?? 0,
+                    takeprofit ?? 0,
+                    comment ?? string.Empty,
+                    magic ?? 0,
+                    e
+                ),
+                JsonSerializerOptionsService.order
+            )
         );
     }
 

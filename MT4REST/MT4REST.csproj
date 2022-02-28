@@ -8,7 +8,16 @@
 
   <ItemGroup>
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.2.3" />
-    <Reference Include="MT4ServerAPI.dll"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Controllers\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="MT4ServerApi">
+      <HintPath>..\MT4ServerAPI.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
 </Project>

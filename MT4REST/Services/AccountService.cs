@@ -6,7 +6,7 @@ namespace MT4REST.Services;
 public static class AccountService
 {
     private static List<Account> accounts;
-    public static ulong nextId = 1;
+    private static ulong nextId = 1;
 
     static AccountService()
     {
