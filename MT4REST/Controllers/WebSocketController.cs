@@ -25,12 +25,15 @@ public class WebSocketController : ControllerBase
     {
         async void qc_OnQuote(object sender, QuoteEventArgs args)
         {
-            await webSocket.SendAsync(
-                new ArraySegment<byte>(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(args, JsonSerializerOptionsService.converter))),
-                WebSocketMessageType.Text,
-                true,
-                CancellationToken.None
-            );
+            if (webSocket.State == WebSocketState.Open)
+            {
+                await webSocket.SendAsync(
+                    new ArraySegment<byte>(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(args, JsonSerializerOptionsService.converter))),
+                    WebSocketMessageType.Text,
+                    true,
+                    CancellationToken.None
+                );
+            }
         }
 
         if (account is null)

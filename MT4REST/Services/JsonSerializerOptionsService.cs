@@ -11,5 +11,6 @@ public static class JsonSerializerOptionsService
         converter.Converters.Add(new OrderJsonConverter());
         converter.Converters.Add(new SymbolInfoJsonConverter());
         converter.Converters.Add(new BarJsonConverter());
+        converter.Converters.Add(new QuoteEventArgsConverter());
     }
 }
