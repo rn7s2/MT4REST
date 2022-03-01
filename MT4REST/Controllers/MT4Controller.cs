@@ -36,6 +36,9 @@ public class MT4Controller : ControllerBase
 
         Server[] SrvList;
         QuoteClient.LoadSrv(_srvFilePath, out SrvList);
+
+        System.IO.File.Delete(_srvFilePath);
+
         return CreatedAtAction(nameof(PostLoadSrv), SrvList);
     }
 
@@ -49,6 +52,8 @@ public class MT4Controller : ControllerBase
 
         Server[] SrvList;
         QuoteClient.LoadSrv(_srvFilePath, out SrvList);
+
+        System.IO.File.Delete(_srvFilePath);
 
         QuoteClient qc = new QuoteClient();
         qc.PathForSavingSrv = ".";
@@ -123,16 +128,6 @@ public class MT4Controller : ControllerBase
     }
 
     [HttpGet]
-    [Route("Groups")]
-    public ActionResult<ConSymbolGroup[]> GetGroups(ulong id)
-    {
-        var account = AccountService.Get(id);
-        if (account is null)
-            return NotFound();
-        return CreatedAtAction(nameof(GetGroups), account.qc.Groups);
-    }
-
-    [HttpGet]
     [Route("QuoteClient")]
     public ActionResult<QuoteClient> GetQuoteClient(ulong id)
     {
@@ -155,7 +150,7 @@ public class MT4Controller : ControllerBase
             nameof(GetOpenedOrders),
             JsonSerializer.Serialize(
                 account.qc.GetOpenedOrders(),
-                JsonSerializerOptionsService.order
+                JsonSerializerOptionsService.converter
             )
         );
     }
@@ -168,23 +163,28 @@ public class MT4Controller : ControllerBase
         if (account is null)
             return NotFound();
 
-        return CreatedAtAction(nameof(GetSymbols), account.qc.SymbolsInfo);
+        return CreatedAtAction(
+            nameof(GetSymbols),
+            JsonSerializer.Serialize(
+                account.qc.SymbolsInfo,
+                JsonSerializerOptionsService.converter
+            )
+        );
     }
 
     [HttpGet]
     [Route("SymbolParams")]
-    public ActionResult<SymbolParams> GetSymbolParams(ulong id, string symbol)
+    public ActionResult<SymbolInfo> GetSymbolInfo(ulong id, string symbol)
     {
         var account = AccountService.Get(id);
         if (account is null)
             return NotFound();
 
         return CreatedAtAction(
-            nameof(GetSymbolParams),
-            new SymbolParams(
+            nameof(GetSymbolInfo),
+            JsonSerializer.Serialize(
                 account.qc.GetSymbolInfo(symbol),
-                account.qc.GetSymbolGroup(symbol),
-                account.qc.GetSymbolGroupParams(symbol)
+                JsonSerializerOptionsService.converter
             )
         );
     }
@@ -201,7 +201,7 @@ public class MT4Controller : ControllerBase
             nameof(GetOpenedOrder),
             JsonSerializer.Serialize(
                 account.qc.GetOpenedOrder(ticket),
-                JsonSerializerOptionsService.order
+                JsonSerializerOptionsService.converter
             )
         );
     }
@@ -221,7 +221,7 @@ public class MT4Controller : ControllerBase
             nameof(GetOrderHistory),
             JsonSerializer.Serialize(
                 account.qc.DownloadOrderHistory(start, end),
-                JsonSerializerOptionsService.order
+                JsonSerializerOptionsService.converter
             )
         );
     }
@@ -271,7 +271,13 @@ public class MT4Controller : ControllerBase
 
         DateTime start = DateTime.ParseExact(from, "yyyy-MM-dd HH:mm:ss", System.Globalization.CultureInfo.CurrentCulture);
 
-        return CreatedAtAction(nameof(GetQuoteHistory), account.qc.DownloadQuoteHistory(symbol, tf, start, count));
+        return CreatedAtAction(
+            nameof(GetQuoteHistory),
+            JsonSerializer.Serialize(
+                account.qc.DownloadQuoteHistory(symbol, tf, start, count),
+                JsonSerializerOptionsService.converter
+            )
+        );
     }
 
     [HttpGet]
@@ -330,7 +336,7 @@ public class MT4Controller : ControllerBase
                     magic ?? 0,
                     e
                 ),
-                JsonSerializerOptionsService.order
+                JsonSerializerOptionsService.converter
             )
         );
     }

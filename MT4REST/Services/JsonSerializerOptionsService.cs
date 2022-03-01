@@ -4,10 +4,12 @@ using System.Text.Json;
 namespace MT4REST.Services;
 public static class JsonSerializerOptionsService
 {
-    public static JsonSerializerOptions order = new JsonSerializerOptions();
+    public static JsonSerializerOptions converter = new JsonSerializerOptions();
 
     static JsonSerializerOptionsService()
     {
-        order.Converters.Add(new OrderJsonConverter());
+        converter.Converters.Add(new OrderJsonConverter());
+        converter.Converters.Add(new SymbolInfoJsonConverter());
+        converter.Converters.Add(new BarJsonConverter());
     }
 }
