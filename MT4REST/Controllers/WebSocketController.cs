@@ -25,15 +25,12 @@ public class WebSocketController : ControllerBase
     {
         async void qc_OnQuote(object sender, QuoteEventArgs args)
         {
-            if (webSocket.State == WebSocketState.Open)
-            {
-                await webSocket.SendAsync(
-                    new ArraySegment<byte>(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(args, JsonSerializerOptionsService.converter))),
-                    WebSocketMessageType.Text,
-                    true,
-                    CancellationToken.None
-                );
-            }
+            await webSocket.SendAsync(
+                new ArraySegment<byte>(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(args, JsonSerializerOptionsService.converter))),
+                WebSocketMessageType.Text,
+                true,
+                CancellationToken.None
+            );
         }
 
         if (account is null)
@@ -47,13 +44,16 @@ public class WebSocketController : ControllerBase
                 CancellationToken.None
             );
 
-            account.qc.OnQuote += new QuoteEventHandler(qc_OnQuote);
+            QuoteEventHandler handler = new QuoteEventHandler(qc_OnQuote);
+            account.qc.OnQuote += handler;
 
             // 通过从客户端读取数据来检测客户端是否断开
             var buffer = new byte[1024 * 4];
             WebSocketReceiveResult result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
             while (!result.CloseStatus.HasValue)
                 result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
+
+            account.qc.OnQuote -= handler;
             await webSocket.CloseAsync(result.CloseStatus.Value, result.CloseStatusDescription, CancellationToken.None);
         }
     }

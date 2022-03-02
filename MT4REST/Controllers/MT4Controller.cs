@@ -135,7 +135,13 @@ public class MT4Controller : ControllerBase
         if (account is null)
             return NotFound();
 
-        return CreatedAtAction(nameof(GetQuoteClient), account.qc);
+        return CreatedAtAction(
+            nameof(GetQuoteClient),
+            JsonSerializer.Serialize(
+                account.qc,
+                JsonSerializerOptionsService.converter
+            )
+        );
     }
 
     [HttpGet]
