@@ -348,6 +348,84 @@ public class MT4Controller : ControllerBase
     }
 
     [HttpGet]
+    [Route("OrderModify")]
+    public ActionResult<Order> GetOrderModify(ulong id, int ticket, double stoploss, double takeprofit, double? price, string? expiration)
+    {
+        var account = AccountService.Get(id);
+        if (account is null)
+            return NotFound();
+
+        DateTime e;
+        if (expiration is null)
+            e = default(DateTime);
+        else
+            e = DateTime.ParseExact(expiration, "yyyy-MM-dd HH:mm:ss", System.Globalization.CultureInfo.CurrentCulture);
+
+        Order order;
+        try
+        {
+            order = account.qc.GetOpenedOrder(ticket);
+        }
+        catch (Exception _e)
+        {
+            Console.WriteLine(_e.ToString());
+
+            return NotFound();
+        }
+
+        return CreatedAtAction(
+            nameof(GetOrderModify),
+            JsonSerializer.Serialize(
+                account.oc.OrderModify(
+                    ticket,
+                    order.Symbol,
+                    order.Type,
+                    order.Lots,
+                    price ?? order.OpenPrice,
+                    stoploss,
+                    takeprofit,
+                    e
+                ),
+                JsonSerializerOptionsService.converter
+            )
+        );
+    }
+
+    [HttpGet]
+    [Route("OrderClose")]
+    public ActionResult<Order> GetOrderClose(ulong id, int ticket, double? lots, double? price, int? slippage)
+    {
+        var account = AccountService.Get(id);
+        if (account is null)
+            return NotFound();
+
+        Order order;
+        try
+        {
+            order = account.qc.GetOpenedOrder(ticket);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.ToString());
+            return NotFound();
+        }
+
+        return CreatedAtAction(
+            nameof(GetOrderClose),
+            JsonSerializer.Serialize(
+                account.oc.OrderClose(
+                    order.Symbol,
+                    order.Ticket,
+                    lots ?? order.Lots,
+                    price ?? account.qc.GetQuote(order.Symbol).Bid,
+                    slippage ?? 200
+                ),
+                JsonSerializerOptionsService.converter
+            )
+        );
+    }
+
+    [HttpGet]
     [Route("Disconnect")]
     public IActionResult GetDisconnect(ulong id)
     {
