@@ -16,7 +16,7 @@
 
   <ItemGroup>
     <Reference Include="MT4ServerApi">
-      <HintPath>..\MT4ServerAPI.dll</HintPath>
+      <HintPath>MT4ServerAPI.dll</HintPath>
     </Reference>
   </ItemGroup>
 
