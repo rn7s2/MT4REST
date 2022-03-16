@@ -128,6 +128,20 @@ public class MT4Controller : ControllerBase
     }
 
     [HttpGet]
+    [Route("AccountBasicInfo")]
+    public ActionResult<AccountBasicInfo> GetAccountBasicInfo(ulong id)
+    {
+        var account = AccountService.Get(id);
+        if (account is null)
+            return NotFound();
+
+        return CreatedAtAction(
+            nameof(GetAccountBasicInfo),
+            new AccountBasicInfo(account.qc.AccountEquity, account.qc.AccountFreeMargin, account.qc.AccountProfit)
+        );
+    }
+
+    [HttpGet]
     [Route("QuoteClient")]
     public ActionResult<QuoteClient> GetQuoteClient(ulong id)
     {
